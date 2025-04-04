@@ -1,0 +1,1 @@
+class DatabaseException < StandardError; end

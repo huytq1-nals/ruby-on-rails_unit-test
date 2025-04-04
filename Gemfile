@@ -78,4 +78,7 @@ group :test do
   gem "capybara"
   gem "selenium-webdriver"
   gem "factory_bot", "~> 6.5"
+  gem "faker", "~> 2.19"
+  gem "timecop"
+  gem "simplecov"
 end
