@@ -1,3 +1,6 @@
+require 'simplecov'
+SimpleCov.start
+
 # This file is copied to spec/ when you run 'rails generate rspec:install'
 require 'spec_helper'
 ENV['RAILS_ENV'] ||= 'test'
@@ -9,6 +12,9 @@ abort("The Rails environment is running in production mode!") if Rails.env.produ
 # return unless Rails.env.test?
 require 'rspec/rails'
 # Add additional requires below this line. Rails is not loaded until this point!
+
+require 'factory_bot'
+FactoryBot.definition_file_paths << File.expand_path('../spec/factories', __FILE__)
 
 # Requires supporting ruby files with custom matchers and macros, etc, in
 # spec/support/ and its subdirectories. Files matching `spec/**/*_spec.rb` are
@@ -34,6 +40,7 @@ rescue ActiveRecord::PendingMigrationError => e
 end
 RSpec.configure do |config|
   # Remove this line if you're not using ActiveRecord or ActiveRecord fixtures
+  config.include FactoryBot::Syntax::Methods
   config.fixture_paths = [
     Rails.root.join('spec/fixtures')
   ]
@@ -44,7 +51,6 @@ RSpec.configure do |config|
   config.use_transactional_fixtures = true
 
   # You can uncomment this line to turn off ActiveRecord support entirely.
-  # config.use_active_record = false
 
   # RSpec Rails can automatically mix in different behaviours to your tests
   # based on their file location, for example enabling you to call `get` and
@@ -65,4 +71,29 @@ RSpec.configure do |config|
   config.filter_rails_from_backtrace!
   # arbitrary gems may also be filtered via:
   # config.filter_gems_from_backtrace("gem name")
+  # spec/rails_helper.rb
+  config.before(:suite) do
+    FileUtils.mkdir_p(Rails.root.join('spec', 'tmp')) unless Dir.exist?(Rails.root.join('spec', 'tmp'))
+  end
+
+  config.around(:each) do |example|
+    original_directory = Dir.pwd
+
+    if Rails.env.test?
+      Dir.chdir(Rails.root.join('spec', 'tmp'))
+    end
+
+    example.run
+
+    Dir.chdir(original_directory)
+  end
+
+  config.after(:suite) do
+    tmp_dir = Rails.root.join('spec', 'tmp')
+
+    Dir.glob("#{tmp_dir}/*.csv").each do |file|
+      File.delete(file) if File.exist?(file)
+    end
+  end
 end
+FactoryBot.reload
